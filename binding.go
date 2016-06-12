@@ -92,7 +92,6 @@ func bindWithMap(objType reflect.Type, objValue, cleanDataValue reflect.Value, s
 			continue
 		}
 
-		//fieldValue.Set(reflect.ValueOf(value))
 		if err := setValue(objValue, fieldValue, fieldStruct, value); err != nil {
 			return err
 		}
@@ -124,6 +123,7 @@ func setDefaultValue(objValue, fieldValue, cleanDataValue reflect.Value, fieldSt
 
 func setValue(objValue, fieldValue reflect.Value, fieldStruct reflect.StructField, value interface{}) error {
 	var vValue = reflect.ValueOf(value)
+	var fieldValueKind = fieldValue.Kind()
 
 	var mName = k_BINDING_CLEANED_FUNC_PREFIX + fieldStruct.Name
 	var mValue = objValue.MethodByName(mName)
@@ -142,15 +142,38 @@ func setValue(objValue, fieldValue reflect.Value, fieldStruct reflect.StructFiel
 			}
 		}
 		fieldValue.Set(rList[0])
-	} else {
-		var valueKind = vValue.Kind()
-		if valueKind == fieldValue.Kind() {
-			return _setValueWithSameKind(fieldValue, fieldStruct, valueKind, vValue)
+	} else if fieldValueKind == reflect.Slice && fieldValue.IsNil() == false {
+		var valueLen int
+		if vValue.Kind() == reflect.Slice {
+			valueLen = vValue.Len()
+			var s = reflect.MakeSlice(fieldValue.Type(), valueLen, valueLen)
+			for i:=0; i<valueLen; i++ {
+				if err := _setValue(s.Index(i), fieldStruct, vValue.Index(i)); err != nil {
+					return err
+				}
+			}
+			fieldValue.Set(s)
 		} else {
-			return _setValueWithDiffKind(fieldValue, fieldStruct, valueKind, vValue)
+			valueLen = 1
+			var s = reflect.MakeSlice(fieldValue.Type(), valueLen, valueLen)
+			if err := _setValue(s.Index(0), fieldStruct, vValue); err != nil {
+				return err
+			}
+			fieldValue.Set(s)
 		}
+	} else {
+		return _setValue(fieldValue, fieldStruct, vValue)
 	}
 	return nil
+}
+
+func _setValue(fieldValue reflect.Value, fieldStruct reflect.StructField, value reflect.Value) error {
+	var valueKind = value.Kind()
+	var fieldKind = fieldValue.Kind()
+	if valueKind == fieldKind {
+		return _setValueWithSameKind(fieldValue, fieldStruct, valueKind, value)
+	}
+	return _setValueWithDiffKind(fieldValue, fieldStruct, valueKind, value)
 }
 
 func _setValueWithSameKind(fieldValue reflect.Value, fieldStruct reflect.StructField, valueKind reflect.Kind, value reflect.Value) error {
@@ -191,7 +214,7 @@ func _setValueWithDiffKind(fieldValue reflect.Value, fieldStruct reflect.StructF
 	case reflect.Float32, reflect.Float64:
 		fieldValue.SetFloat(f)
 	case reflect.Bool:
-		if f >= 1.0000 {
+		if f >= 0.99999999 {
 			fieldValue.SetBool(true)
 		} else {
 			fieldValue.SetBool(false)

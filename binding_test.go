@@ -15,6 +15,7 @@ type Human struct {
 	Name        MyString  `binding:"name"`
 	Age         int       `binding:"age"`
 	Birthday    time.Time `binding:"birthday"`
+	List        []int     `binding:"list"`
 }
 
 func (this *Human) CleanedName(n string) (MyString, error) {
@@ -44,13 +45,13 @@ type Student struct {
 	Class  Class
 }
 
-var source = map[string]interface{}{"name": "SmartWalle", "age": 123.5, "birthday": "2016-06-12", "number": 1234, "class_name_1": "class 1"}
+var source = map[string]interface{}{"list": []string{"123", "456"}, "name": "SmartWalle", "age": 123.5, "birthday": "2016-06-12", "number": 1234, "class_name_1": "class 1"}
 
 func TestBindPoint(t *testing.T) {
 	var s *Student
 	fmt.Println(Bind(source, &s))
 	if s != nil {
 		fmt.Println(s.CleanedData)
-		fmt.Println(s.Name, s.Age, s.Birthday, s.Number, s.Class.ClassName)
+		fmt.Println(s.Name, s.Age, s.Birthday, s.Number, s.Class.ClassName, s.List)
 	}
 }
