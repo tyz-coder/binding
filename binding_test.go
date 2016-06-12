@@ -12,9 +12,9 @@ type MyString string
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 type Human struct {
 	CleanedData map[string]interface{}
-	Name        MyString  `model:"name"`
-	Age         int       `model:"age"`
-	Birthday    time.Time `model:"birthday"`
+	Name        MyString  `binding:"name"`
+	Age         int       `binding:"age"`
+	Birthday    time.Time `binding:"birthday"`
 }
 
 func (this *Human) CleanedName(n string) (MyString, error) {
@@ -30,7 +30,7 @@ func (this *Human) CleanedBirthday(n string) (time.Time, error) {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 type Class struct {
-	ClassName string `model:"class_name"`
+	ClassName string `binding:"class_name"`
 }
 
 func (this *Class) DefaultClassName() string {
@@ -40,7 +40,7 @@ func (this *Class) DefaultClassName() string {
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 type Student struct {
 	Human
-	Number int `model:"number"`
+	Number int `binding:"number"`
 	Class  Class
 }
 
