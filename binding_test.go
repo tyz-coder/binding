@@ -1,26 +1,32 @@
 package binding
 
 import (
+	"errors"
 	"fmt"
 	"testing"
-	"github.com/smartwalle/going/time"
+	"time"
 )
 
 type MyString string
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 type Human struct {
-	Name MyString `model:"name"`
-	Age  int      `model:"age"`
-	BD   time.Timestamp `model:bd`
+	CleanedData map[string]interface{}
+	Name        MyString  `model:"name"`
+	Age         int       `model:"age"`
+	Birthday    time.Time `model:"birthday"`
 }
 
-//func (this *Human) CleanedName(n int) (MyString, error) {
-//	if n != 0 {
-//		return MyString(fmt.Sprintf("%d", n)), nil
-//	}
-//	return "", errors.New("随便给点吧")
-//}
+func (this *Human) CleanedName(n string) (MyString, error) {
+	if len(n) > 0 {
+		return MyString(fmt.Sprintf("My name is %s", n)), nil
+	}
+	return "", errors.New("随便给点吧")
+}
+
+func (this *Human) CleanedBirthday(n string) (time.Time, error) {
+	return time.Parse("2006-01-02", n)
+}
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 type Class struct {
@@ -28,7 +34,7 @@ type Class struct {
 }
 
 func (this *Class) DefaultClassName() string {
-	return "haha"
+	return "class 3"
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -38,12 +44,13 @@ type Student struct {
 	Class  Class
 }
 
-var source = map[string]interface{}{"name": "name field", "age": "123", "number": 1234, "class_name1": "adfsf", "bd": 1444444444}
+var source = map[string]interface{}{"name": "SmartWalle", "age": 123.5, "birthday": "2016-06-12", "number": 1234, "class_name_1": "class 1"}
 
 func TestBindPoint(t *testing.T) {
 	var s *Student
 	fmt.Println(Bind(source, &s))
 	if s != nil {
-		fmt.Println(s.Name, s.Age, s.Number, s.Class.ClassName, s.BD.Time())
+		fmt.Println(s.CleanedData)
+		fmt.Println(s.Name, s.Age, s.Birthday, s.Number, s.Class.ClassName)
 	}
 }
