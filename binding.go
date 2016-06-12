@@ -2,21 +2,21 @@ package binding
 
 import (
 	"errors"
-	"reflect"
 	"fmt"
+	"reflect"
 	"strconv"
 )
 
 const (
-	k_MODEL_TAG                 = "model"
-	k_MODEL_CLEANED_FUNC_PREFIX = "Cleaned"
-	k_MODEL_NO_TAG              = "-"
-	k_MODEL_CLEANED_DATA        = "CleanedData"
-	k_MODEL_DEFAULT_FUNC_PREFIX = "Default"
+	k_BINDING_TAG                 = "binding"
+	k_BINDING_CLEANED_FUNC_PREFIX = "Cleaned"
+	k_BINDING_NO_TAG              = "-"
+	k_BINDING_CLEANED_DATA        = "CleanedData"
+	k_BINDING_DEFAULT_FUNC_PREFIX = "Default"
 )
 
 func Bind(source map[string]interface{}, result interface{}) (err error) {
-	return BindWithTag(source, result, k_MODEL_TAG)
+	return BindWithTag(source, result, k_BINDING_TAG)
 }
 
 func BindWithTag(source map[string]interface{}, result interface{}, tag string) (err error) {
@@ -46,7 +46,7 @@ func BindWithTag(source map[string]interface{}, result interface{}, tag string) 
 		break
 	}
 
-	var cleanDataValue = objValue.FieldByName(k_MODEL_CLEANED_DATA)
+	var cleanDataValue = objValue.FieldByName(k_BINDING_CLEANED_DATA)
 	if cleanDataValue.IsValid() && cleanDataValue.IsNil() {
 		cleanDataValue.Set(reflect.MakeMap(cleanDataValue.Type()))
 	}
@@ -82,7 +82,7 @@ func bindWithMap(objType reflect.Type, objValue, cleanDataValue reflect.Value, s
 				continue
 			}
 
-		} else if tag == k_MODEL_NO_TAG {
+		} else if tag == k_BINDING_NO_TAG {
 			continue
 		}
 
@@ -105,7 +105,7 @@ func bindWithMap(objType reflect.Type, objValue, cleanDataValue reflect.Value, s
 }
 
 func setDefaultValue(objValue, fieldValue, cleanDataValue reflect.Value, fieldStruct reflect.StructField, tag string) {
-	var mName = k_MODEL_DEFAULT_FUNC_PREFIX + fieldStruct.Name
+	var mName = k_BINDING_DEFAULT_FUNC_PREFIX + fieldStruct.Name
 	var mValue = objValue.MethodByName(mName)
 	if mValue.IsValid() == false {
 		if objValue.CanAddr() {
@@ -125,7 +125,7 @@ func setDefaultValue(objValue, fieldValue, cleanDataValue reflect.Value, fieldSt
 func setValue(objValue, fieldValue reflect.Value, fieldStruct reflect.StructField, value interface{}) error {
 	var vValue = reflect.ValueOf(value)
 
-	var mName = k_MODEL_CLEANED_FUNC_PREFIX + fieldStruct.Name
+	var mName = k_BINDING_CLEANED_FUNC_PREFIX + fieldStruct.Name
 	var mValue = objValue.MethodByName(mName)
 	if mValue.IsValid() == false {
 		if objValue.CanAddr() {
@@ -165,15 +165,15 @@ func _setValueWithSameKind(fieldValue reflect.Value, fieldStruct reflect.StructF
 		fieldValue.SetFloat(value.Float())
 	case reflect.Bool:
 		fieldValue.SetBool(value.Bool())
-//	case reflect.Complex64, reflect.Complex128:
-//		fieldValue.SetComplex(value.Complex())
+		//	case reflect.Complex64, reflect.Complex128:
+		//		fieldValue.SetComplex(value.Complex())
 	default:
 		return errors.New(fmt.Sprintf("Unknown type: %s", fieldStruct.Name))
 	}
 	return nil
 }
 
-func _setValueWithDiffKind(fieldValue reflect.Value, fieldStruct reflect.StructField, valueKind reflect.Kind, value reflect.Value) (error) {
+func _setValueWithDiffKind(fieldValue reflect.Value, fieldStruct reflect.StructField, valueKind reflect.Kind, value reflect.Value) error {
 	var f, err = floatValue(valueKind, value)
 	if err != nil {
 		return errors.New(fmt.Sprintln("[" + fieldStruct.Name + "]" + err.Error()))
@@ -196,8 +196,8 @@ func _setValueWithDiffKind(fieldValue reflect.Value, fieldStruct reflect.StructF
 		} else {
 			fieldValue.SetBool(false)
 		}
-//	case reflect.Complex64, reflect.Complex128:
-//		fieldValue.SetComplex(value.Complex())
+		//	case reflect.Complex64, reflect.Complex128:
+		//		fieldValue.SetComplex(value.Complex())
 	default:
 		return errors.New(fmt.Sprintf("Unknown type: %s", fieldStruct.Name))
 	}
