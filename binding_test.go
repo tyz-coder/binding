@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"testing"
 	"time"
+	"strconv"
 )
 
 type Human struct {
@@ -16,18 +17,36 @@ func (this *Human) CleanedBirthday(n string) (time.Time, error) {
 	return time.Parse("2006-01-02", n)
 }
 
-
 type Student struct {
 	Human
 	Number int    `form:"number"`
 	Class  string `form:"class"`
 }
 
-func (this *Student) DefaultClass() string {
-	return "Class one"
+//func (this *Student) DefaultClass() string {
+//	return "Class one"
+//}
+
+
+func (this *Human) DefaultAge() int {
+	return 100
 }
 
-var formData = map[string]interface{}{"name": "Yangfeng", "age": "12", "number": "9", "birthday": "2016-06-12"}
+func (this *Student) DefaultAge() int {
+	return 200
+}
+
+func (this *Human) CleanedNumber(n string) (int, error) {
+	var num, e = strconv.Atoi(n)
+	return num+100, e
+}
+
+//func (this *Student) CleanedNumber(n string) (int, error) {
+//	var num, e = strconv.Atoi(n)
+//	return num+200, e
+//}
+
+var formData = map[string]interface{}{"name": "Yangfeng", "number": "9", "birthday": "2016-06-12"}
 
 func TestSample(t *testing.T) {
 	// 绑定
