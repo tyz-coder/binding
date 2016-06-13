@@ -23,9 +23,9 @@ type Student struct {
 	Class  string `form:"class"`
 }
 
-//func (this *Student) DefaultClass() string {
-//	return "Class one"
-//}
+func (this *Student) DefaultClass() string {
+	return "Class one"
+}
 
 
 func (this *Human) DefaultAge() int {
@@ -36,15 +36,10 @@ func (this *Student) DefaultAge() int {
 	return 200
 }
 
-func (this *Human) CleanedNumber(n string) (int, error) {
+func (this *Student) CleanedNumber(n string) (int, error) {
 	var num, e = strconv.Atoi(n)
-	return num+100, e
+	return num+200, e
 }
-
-//func (this *Student) CleanedNumber(n string) (int, error) {
-//	var num, e = strconv.Atoi(n)
-//	return num+200, e
-//}
 
 var formData = map[string]interface{}{"name": "Yangfeng", "number": "9", "birthday": "2016-06-12"}
 
