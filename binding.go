@@ -214,7 +214,7 @@ func _setValueWithDiffKind(fieldValue reflect.Value, fieldStruct reflect.StructF
 	case reflect.Float32, reflect.Float64:
 		fieldValue.SetFloat(f)
 	case reflect.Bool:
-		if f >= 0.99999999 {
+		if f >= 0.990 {
 			fieldValue.SetBool(true)
 		} else {
 			fieldValue.SetBool(false)
