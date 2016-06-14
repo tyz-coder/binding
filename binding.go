@@ -131,7 +131,7 @@ func setValue(currentObjValue, objValue, fieldValue reflect.Value, fieldStruct r
 	var vValue = reflect.ValueOf(value)
 	var fieldValueKind = fieldValue.Kind()
 
-	var mValue = getFuncWithName(k_BINDING_CLEANED_FUNC_PREFIX + fieldStruct.Name, objValue, objValue)
+	var mValue = getFuncWithName(k_BINDING_CLEANED_FUNC_PREFIX + fieldStruct.Name, currentObjValue, objValue)
 	if mValue.IsValid() {
 		var rList = mValue.Call([]reflect.Value{vValue})
 		if len(rList) > 1 {
