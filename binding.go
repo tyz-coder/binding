@@ -181,7 +181,7 @@ func _setValueWithSameKind(fieldValue reflect.Value, fieldStruct reflect.StructF
 		fieldValue.SetString(value.String())
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
 		fieldValue.SetInt(value.Int())
-	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uintptr:
 		fieldValue.SetUint(value.Uint())
 	case reflect.Float32, reflect.Float64:
 		fieldValue.SetFloat(value.Float())
@@ -208,7 +208,7 @@ func _setValueWithDiffKind(fieldValue reflect.Value, fieldStruct reflect.StructF
 		fieldValue.SetString(fmt.Sprintf("%f", f))
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
 		fieldValue.SetInt(int64(f))
-	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uintptr:
 		fieldValue.SetUint(uint64(f))
 	case reflect.Float32, reflect.Float64:
 		fieldValue.SetFloat(f)
@@ -233,7 +233,7 @@ func floatValue(valueKind reflect.Kind, value reflect.Value) (float64, error) {
 		return v, e
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
 		return float64(value.Int()), nil
-	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uintptr:
 		return float64(value.Uint()), nil
 	case reflect.Float32, reflect.Float64:
 		return value.Float(), nil
