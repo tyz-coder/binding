@@ -187,21 +187,22 @@ func _setValueWithSameKind(fieldValue reflect.Value, fieldStruct reflect.StructF
 		fieldValue.SetFloat(value.Float())
 	case reflect.Bool:
 		fieldValue.SetBool(value.Bool())
-		//	case reflect.Complex64, reflect.Complex128:
-		//		fieldValue.SetComplex(value.Complex())
 	default:
 		return errors.New(fmt.Sprintf("Unknown type: %s", fieldStruct.Name))
 	}
 	return nil
 }
 
-func _setValueWithDiffKind(fieldValue reflect.Value, fieldStruct reflect.StructField, valueKind reflect.Kind, value reflect.Value) error {
-	var f, err = floatValue(valueKind, value)
-	if err != nil {
-		return errors.New(fmt.Sprintln("[" + fieldStruct.Name + "]" + err.Error()))
-	}
-
+func _setValueWithDiffKind(fieldValue reflect.Value, fieldStruct reflect.StructField, valueKind reflect.Kind, value reflect.Value) (err error) {
 	var fieldValueKind = fieldValue.Kind()
+
+	var f float64
+	if fieldValueKind != reflect.Bool {
+		f, err = floatValue(valueKind, value)
+		if err != nil {
+			return errors.New(fmt.Sprintln("[" + fieldStruct.Name + "]" + err.Error()))
+		}
+	}
 
 	switch fieldValueKind {
 	case reflect.String:
@@ -213,17 +214,41 @@ func _setValueWithDiffKind(fieldValue reflect.Value, fieldStruct reflect.StructF
 	case reflect.Float32, reflect.Float64:
 		fieldValue.SetFloat(f)
 	case reflect.Bool:
-		if f >= 0.990 {
-			fieldValue.SetBool(true)
-		} else {
-			fieldValue.SetBool(false)
-		}
-		//	case reflect.Complex64, reflect.Complex128:
-		//		fieldValue.SetComplex(value.Complex())
+		var b = boolValue(valueKind, value)
+		fieldValue.SetBool(b)
 	default:
 		return errors.New(fmt.Sprintf("Unknown type: %s", fieldStruct.Name))
 	}
 	return nil
+}
+
+func boolValue(valueKind reflect.Kind, value reflect.Value) (bool) {
+	switch valueKind {
+	case reflect.String:
+		var v = value.String()
+		if v == "true" || v == "yes" || v == "on" || v == "t" || v == "y" || v == "1" {
+			return true
+		}
+		return false
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		if value.Int() == 1 {
+			return true
+		}
+		return false
+	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uintptr:
+		if value.Uint() == 1 {
+			return true
+		}
+		return false
+	case reflect.Float32, reflect.Float64:
+		if value.Float() > 0.9990 {
+			return true
+		}
+		return false
+	case reflect.Bool:
+		return value.Bool()
+	}
+	return false
 }
 
 func floatValue(valueKind reflect.Kind, value reflect.Value) (float64, error) {
