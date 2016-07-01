@@ -8,7 +8,7 @@ import (
 )
 
 type Human struct {
-	Name     string    `form:"name"`
+	Name     []string    `form:"name"`
 	Age      int       `form:"age"`
 	Birthday time.Time `form:"birthday"`
 }
@@ -48,7 +48,7 @@ func TestSample(t *testing.T) {
 	var s *Student
 	var err = BindWithTag(formData, &s, "form")
 	if err != nil {
-		fmt.Println("绑定失败")
+		fmt.Println("绑定失败", err)
 	}
 	fmt.Println(s)
 }

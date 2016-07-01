@@ -141,9 +141,10 @@ func setValue(currentObjValue, objValue, fieldValue reflect.Value, fieldStruct r
 			}
 		}
 		fieldValue.Set(rList[0])
-	} else if fieldValueKind == reflect.Slice && fieldValue.IsNil() == false {
+	} else if fieldValueKind == reflect.Slice /* && fieldValue.IsNil() == false */ {
 		var valueLen int
 		if vValue.Kind() == reflect.Slice {
+			// 如果绑定源数据也是 slice
 			valueLen = vValue.Len()
 			var s = reflect.MakeSlice(fieldValue.Type(), valueLen, valueLen)
 			for i:=0; i<valueLen; i++ {
@@ -153,6 +154,7 @@ func setValue(currentObjValue, objValue, fieldValue reflect.Value, fieldStruct r
 			}
 			fieldValue.Set(s)
 		} else {
+			// 如果绑定源数据不是 slice
 			valueLen = 1
 			var s = reflect.MakeSlice(fieldValue.Type(), valueLen, valueLen)
 			if err := _setValue(s.Index(0), fieldStruct, vValue); err != nil {
@@ -169,6 +171,13 @@ func setValue(currentObjValue, objValue, fieldValue reflect.Value, fieldStruct r
 func _setValue(fieldValue reflect.Value, fieldStruct reflect.StructField, value reflect.Value) error {
 	var valueKind = value.Kind()
 	var fieldKind = fieldValue.Kind()
+
+	if (valueKind == reflect.Slice) {
+		// 如果源数据是 slice, 则取出其第一个数据
+		value = value.Index(0)
+		valueKind = value.Kind()
+	}
+
 	if valueKind == fieldKind {
 		return _setValueWithSameKind(fieldValue, fieldStruct, valueKind, value)
 	}
