@@ -25,11 +25,11 @@ func BindWithTag(source map[string]interface{}, result interface{}, tag string) 
 	var objValueKind = objValue.Kind()
 
 	if objValueKind == reflect.Struct {
-		return errors.New("obj is struct")
+		return errors.New("result argument is struct")
 	}
 
 	if objValue.IsNil() {
-		return errors.New("obj is nil")
+		return errors.New("result argument is nil")
 	}
 
 	for {
