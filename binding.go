@@ -96,21 +96,14 @@ func bindWithMap(objType reflect.Type, currentObjValue, objValue, cleanDataValue
 
 		var value, exists = source[tag]
 		if !exists {
-			setDefaultValue(currentObjValue, objValue, fieldValue, cleanDataValue, fieldStruct, cdTag)
-			continue
-		}
-
-		if err := setValue(currentObjValue, objValue, fieldValue, fieldStruct, value); err != nil {
-			return err
+			setDefaultValue(currentObjValue, objValue, fieldValue, fieldStruct)
+		} else {
+			if err := setValue(currentObjValue, objValue, fieldValue, fieldStruct, value); err != nil {
+				return err
+			}
 		}
 
 		setCleanedData(cleanDataValue, fieldValue, cdTag)
-		//if cleanDataValue.IsValid() {
-		//	if cdTag == k_BINDING_NO_TAG {
-		//		continue
-		//	}
-		//	cleanDataValue.SetMapIndex(reflect.ValueOf(cdTag), fieldValue)
-		//}
 	}
 	return nil
 }
@@ -137,14 +130,10 @@ func getFuncWithName(funcName string, currentObjValue, objValue reflect.Value) r
 	return funcValue
 }
 
-func setDefaultValue(currentObjValue, objValue, fieldValue, cleanDataValue reflect.Value, fieldStruct reflect.StructField, cdTag string) {
+func setDefaultValue(currentObjValue, objValue, fieldValue reflect.Value, fieldStruct reflect.StructField) {
 	var funcValue = getFuncWithName(k_BINDING_DEFAULT_FUNC_PREFIX + fieldStruct.Name, currentObjValue, objValue)
 	if funcValue.IsValid() {
 		var rList = funcValue.Call(nil)
-		setCleanedData(cleanDataValue, rList[0], cdTag)
-		//if cleanDataValue.IsValid() {
-		//	cleanDataValue.SetMapIndex(reflect.ValueOf(cdTag), rList[0])
-		//}
 		fieldValue.Set(rList[0])
 	}
 }
