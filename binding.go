@@ -19,7 +19,11 @@ func Bind(source map[string]interface{}, result interface{}) (err error) {
 	return BindWithTag(source, result, k_BINDING_TAG)
 }
 
-func BindWithTag(source map[string]interface{}, result interface{}, tag string) (err error) {
+func BindWithTag(source map[string]interface{}, result interface{}, tag string) (error) {
+	return BindWithAdvanced(source, result, tag, tag);
+}
+
+func BindWithAdvanced(source map[string]interface{}, result interface{}, tag, cleanedTag string) (error) {
 	var objType = reflect.TypeOf(result)
 	var objValue = reflect.ValueOf(result)
 	var objValueKind = objValue.Kind()
@@ -50,10 +54,10 @@ func BindWithTag(source map[string]interface{}, result interface{}, tag string) 
 	if cleanDataValue.IsValid() && cleanDataValue.IsNil() {
 		cleanDataValue.Set(reflect.MakeMap(cleanDataValue.Type()))
 	}
-	return bindWithMap(objType, objValue, objValue, cleanDataValue, source, tag)
+	return bindWithMap(objType, objValue, objValue, cleanDataValue, source, tag, cleanedTag)
 }
 
-func bindWithMap(objType reflect.Type, currentObjValue, objValue, cleanDataValue reflect.Value, source map[string]interface{}, tagName string) error {
+func bindWithMap(objType reflect.Type, currentObjValue, objValue, cleanDataValue reflect.Value, source map[string]interface{}, tagName, cleanedTagName string) error {
 	var numField = objType.NumField()
 	for i := 0; i < numField; i++ {
 		var fieldStruct = objType.Field(i)
@@ -64,6 +68,10 @@ func bindWithMap(objType reflect.Type, currentObjValue, objValue, cleanDataValue
 		}
 
 		var tag = fieldStruct.Tag.Get(tagName)
+		var cdTag = tag
+		if tagName != cleanedTagName {
+			cdTag = fieldStruct.Tag.Get(cleanedTagName)
+		}
 
 		if tag == "" {
 			tag = fieldStruct.Name
@@ -76,7 +84,7 @@ func bindWithMap(objType reflect.Type, currentObjValue, objValue, cleanDataValue
 			}
 
 			if fieldValue.Kind() == reflect.Struct {
-				if err := bindWithMap(fieldValue.Addr().Type().Elem(), currentObjValue, fieldValue, cleanDataValue, source, tagName); err != nil {
+				if err := bindWithMap(fieldValue.Addr().Type().Elem(), currentObjValue, fieldValue, cleanDataValue, source, tagName, cleanedTagName); err != nil {
 					return err
 				}
 				continue
@@ -88,7 +96,7 @@ func bindWithMap(objType reflect.Type, currentObjValue, objValue, cleanDataValue
 
 		var value, exists = source[tag]
 		if !exists {
-			setDefaultValue(currentObjValue, objValue, fieldValue, cleanDataValue, fieldStruct, tag)
+			setDefaultValue(currentObjValue, objValue, fieldValue, cleanDataValue, fieldStruct, cdTag)
 			continue
 		}
 
@@ -96,11 +104,24 @@ func bindWithMap(objType reflect.Type, currentObjValue, objValue, cleanDataValue
 			return err
 		}
 
-		if cleanDataValue.IsValid() {
-			cleanDataValue.SetMapIndex(reflect.ValueOf(tag), fieldValue)
-		}
+		setCleanedData(cleanDataValue, fieldValue, cdTag)
+		//if cleanDataValue.IsValid() {
+		//	if cdTag == k_BINDING_NO_TAG {
+		//		continue
+		//	}
+		//	cleanDataValue.SetMapIndex(reflect.ValueOf(cdTag), fieldValue)
+		//}
 	}
 	return nil
+}
+
+func setCleanedData(cleanDataValue, fieldValue reflect.Value, cdTag string) {
+	if cleanDataValue.IsValid() {
+		if cdTag == k_BINDING_NO_TAG {
+			return
+		}
+		cleanDataValue.SetMapIndex(reflect.ValueOf(cdTag), fieldValue)
+	}
 }
 
 func getFuncWithName(funcName string, currentObjValue, objValue reflect.Value) reflect.Value {
@@ -116,13 +137,14 @@ func getFuncWithName(funcName string, currentObjValue, objValue reflect.Value) r
 	return funcValue
 }
 
-func setDefaultValue(currentObjValue, objValue, fieldValue, cleanDataValue reflect.Value, fieldStruct reflect.StructField, tag string) {
+func setDefaultValue(currentObjValue, objValue, fieldValue, cleanDataValue reflect.Value, fieldStruct reflect.StructField, cdTag string) {
 	var funcValue = getFuncWithName(k_BINDING_DEFAULT_FUNC_PREFIX + fieldStruct.Name, currentObjValue, objValue)
 	if funcValue.IsValid() {
 		var rList = funcValue.Call(nil)
-		if cleanDataValue.IsValid() {
-			cleanDataValue.SetMapIndex(reflect.ValueOf(tag), rList[0])
-		}
+		setCleanedData(cleanDataValue, rList[0], cdTag)
+		//if cleanDataValue.IsValid() {
+		//	cleanDataValue.SetMapIndex(reflect.ValueOf(cdTag), rList[0])
+		//}
 		fieldValue.Set(rList[0])
 	}
 }
@@ -196,6 +218,8 @@ func _setValueWithSameKind(fieldValue reflect.Value, fieldStruct reflect.StructF
 		fieldValue.SetFloat(value.Float())
 	case reflect.Bool:
 		fieldValue.SetBool(value.Bool())
+	case reflect.Struct:
+		fieldValue.Set(value)
 	default:
 		return errors.New(fmt.Sprintf("Unknown type: %s", fieldStruct.Name))
 	}
