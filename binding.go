@@ -68,12 +68,8 @@ func bindWithMap(objType reflect.Type, currentObjValue, objValue, cleanDataValue
 		}
 
 		var tag = fieldStruct.Tag.Get(tagName)
-		var cdTag = tag
-		if tagName != cleanedTagName {
-			cdTag = fieldStruct.Tag.Get(cleanedTagName)
-		}
 
-		if tag == "" {
+		if tag == "" && fieldStruct.Name == k_BINDING_CLEANED_DATA {
 			tag = fieldStruct.Name
 
 			if fieldValue.Kind() == reflect.Ptr {
@@ -89,20 +85,25 @@ func bindWithMap(objType reflect.Type, currentObjValue, objValue, cleanDataValue
 				}
 				continue
 			}
-
 		} else if tag == k_BINDING_NO_TAG {
 			continue
 		}
 
 		var value, exists = source[tag]
 		if !exists {
-			setDefaultValue(currentObjValue, objValue, fieldValue, fieldStruct)
+			if ok := setDefaultValue(currentObjValue, objValue, fieldValue, fieldStruct); !ok {
+				continue
+			}
 		} else {
 			if err := setValue(currentObjValue, objValue, fieldValue, fieldStruct, value); err != nil {
 				return err
 			}
 		}
 
+		var cdTag = tag
+		if tagName != cleanedTagName {
+			cdTag = fieldStruct.Tag.Get(cleanedTagName)
+		}
 		setCleanedData(cleanDataValue, fieldValue, cdTag)
 	}
 	return nil
@@ -130,12 +131,14 @@ func getFuncWithName(funcName string, currentObjValue, objValue reflect.Value) r
 	return funcValue
 }
 
-func setDefaultValue(currentObjValue, objValue, fieldValue reflect.Value, fieldStruct reflect.StructField) {
+func setDefaultValue(currentObjValue, objValue, fieldValue reflect.Value, fieldStruct reflect.StructField) bool {
 	var funcValue = getFuncWithName(k_BINDING_DEFAULT_FUNC_PREFIX + fieldStruct.Name, currentObjValue, objValue)
 	if funcValue.IsValid() {
 		var rList = funcValue.Call(nil)
 		fieldValue.Set(rList[0])
+		return true
 	}
+	return false
 }
 
 func setValue(currentObjValue, objValue, fieldValue reflect.Value, fieldStruct reflect.StructField, value interface{}) error {
