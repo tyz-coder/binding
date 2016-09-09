@@ -69,7 +69,7 @@ func bindWithMap(objType reflect.Type, currentObjValue, objValue, cleanDataValue
 
 		var tag = fieldStruct.Tag.Get(tagName)
 
-		if tag == "" && fieldStruct.Name == k_BINDING_CLEANED_DATA {
+		if tag == "" && fieldStruct.Name != k_BINDING_CLEANED_DATA {
 			tag = fieldStruct.Name
 
 			if fieldValue.Kind() == reflect.Ptr {
