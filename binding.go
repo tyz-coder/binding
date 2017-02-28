@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"reflect"
 	"strconv"
-	"strings"
 )
 
 const (
@@ -14,18 +13,17 @@ const (
 	k_BINDING_NO_TAG              = "-"
 	k_BINDING_CLEANED_DATA        = "CleanedData"
 	k_BINDING_DEFAULT_FUNC_PREFIX = "Default"
-	k_VALIDATOR_FUNC_SUFFIX       = "Validator"
 )
 
 func Bind(source map[string]interface{}, result interface{}) (err error) {
 	return BindWithTag(source, result, k_BINDING_TAG)
 }
 
-func BindWithTag(source map[string]interface{}, result interface{}, tag string) error {
-	return BindWithAdvanced(source, result, tag, tag)
+func BindWithTag(source map[string]interface{}, result interface{}, tag string) (error) {
+	return BindWithAdvanced(source, result, tag, tag);
 }
 
-func BindWithAdvanced(source map[string]interface{}, result interface{}, tag, cleanedTag string) error {
+func BindWithAdvanced(source map[string]interface{}, result interface{}, tag, cleanedTag string) (error) {
 	var objType = reflect.TypeOf(result)
 	var objValue = reflect.ValueOf(result)
 	var objValueKind = objValue.Kind()
@@ -102,10 +100,6 @@ func bindWithMap(objType reflect.Type, currentObjValue, objValue, cleanDataValue
 			}
 		}
 
-		if err := validate(currentObjValue, objValue, fieldValue, fieldStruct); err != nil {
-			return err
-		}
-
 		var cdTag = tag
 		if tagName != cleanedTagName {
 			cdTag = fieldStruct.Tag.Get(cleanedTagName)
@@ -137,20 +131,8 @@ func getFuncWithName(funcName string, currentObjValue, objValue reflect.Value) r
 	return funcValue
 }
 
-func validate(currentObjValue, objValue, fieldValue reflect.Value, fieldStruct reflect.StructField) error {
-	var funcValue = getFuncWithName(fieldStruct.Name+k_VALIDATOR_FUNC_SUFFIX, currentObjValue, objValue)
-	if funcValue.IsValid() {
-		var eList = funcValue.Call([]reflect.Value{fieldValue})
-
-		if !eList[0].IsNil() {
-			return eList[0].Interface().(error)
-		}
-	}
-	return nil
-}
-
 func setDefaultValue(currentObjValue, objValue, fieldValue reflect.Value, fieldStruct reflect.StructField) bool {
-	var funcValue = getFuncWithName(k_BINDING_DEFAULT_FUNC_PREFIX+fieldStruct.Name, currentObjValue, objValue)
+	var funcValue = getFuncWithName(k_BINDING_DEFAULT_FUNC_PREFIX + fieldStruct.Name, currentObjValue, objValue)
 	if funcValue.IsValid() {
 		var rList = funcValue.Call(nil)
 		fieldValue.Set(rList[0])
@@ -163,7 +145,7 @@ func setValue(currentObjValue, objValue, fieldValue reflect.Value, fieldStruct r
 	var vValue = reflect.ValueOf(value)
 	var fieldValueKind = fieldValue.Kind()
 
-	var mValue = getFuncWithName(k_BINDING_CLEANED_FUNC_PREFIX+fieldStruct.Name, currentObjValue, objValue)
+	var mValue = getFuncWithName(k_BINDING_CLEANED_FUNC_PREFIX + fieldStruct.Name, currentObjValue, objValue)
 	if mValue.IsValid() {
 		var rList = mValue.Call([]reflect.Value{vValue})
 		if len(rList) > 1 {
@@ -179,7 +161,7 @@ func setValue(currentObjValue, objValue, fieldValue reflect.Value, fieldStruct r
 			// 如果绑定源数据也是 slice
 			valueLen = vValue.Len()
 			var s = reflect.MakeSlice(fieldValue.Type(), valueLen, valueLen)
-			for i := 0; i < valueLen; i++ {
+			for i:=0; i<valueLen; i++ {
 				if err := _setValue(s.Index(i), fieldStruct, vValue.Index(i)); err != nil {
 					return err
 				}
@@ -204,7 +186,7 @@ func _setValue(fieldValue reflect.Value, fieldStruct reflect.StructField, value 
 	var valueKind = value.Kind()
 	var fieldKind = fieldValue.Kind()
 
-	if valueKind == reflect.Slice {
+	if (valueKind == reflect.Slice) {
 		// 如果源数据是 slice, 则取出其第一个数据
 		value = value.Index(0)
 		valueKind = value.Kind()
@@ -265,7 +247,7 @@ func _setValueWithDiffKind(fieldValue reflect.Value, fieldStruct reflect.StructF
 	return nil
 }
 
-func boolValue(valueKind reflect.Kind, value reflect.Value) bool {
+func boolValue(valueKind reflect.Kind, value reflect.Value) (bool) {
 	switch valueKind {
 	case reflect.String:
 		var v = value.String()
@@ -297,11 +279,7 @@ func boolValue(valueKind reflect.Kind, value reflect.Value) bool {
 func floatValue(valueKind reflect.Kind, value reflect.Value) (float64, error) {
 	switch valueKind {
 	case reflect.String:
-		var str = value.String()
-		if len(strings.TrimSpace(str)) == 0 {
-			str = "0"
-		}
-		var v, e = strconv.ParseFloat(str, 64)
+		var v, e = strconv.ParseFloat(value.String(), 64)
 		return v, e
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
 		return float64(value.Int()), nil
