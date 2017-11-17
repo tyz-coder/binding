@@ -279,7 +279,11 @@ func boolValue(valueKind reflect.Kind, value reflect.Value) (bool) {
 func floatValue(valueKind reflect.Kind, value reflect.Value) (float64, error) {
 	switch valueKind {
 	case reflect.String:
-		var v, e = strconv.ParseFloat(value.String(), 64)
+		var sv = value.String()
+		if sv == "" {
+			sv = "0"
+		}
+		var v, e = strconv.ParseFloat(sv, 64)
 		return v, e
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
 		return float64(value.Int()), nil
