@@ -8,22 +8,22 @@ import (
 )
 
 const (
-	k_BINDING_TAG                 = "binding"
-	k_BINDING_CLEANED_FUNC_PREFIX = "Cleaned"
-	k_BINDING_NO_TAG              = "-"
-	k_BINDING_CLEANED_DATA        = "CleanedData"
-	k_BINDING_DEFAULT_FUNC_PREFIX = "Default"
+	kBindingTag               = "binding"
+	kBindingCleanedFuncPrefix = "Cleaned"
+	kBindingNoTag             = "-"
+	kBindingCleanedData       = "CleanedData"
+	kBindingDefaultFuncPrefix = "Default"
 )
 
 func Bind(source map[string]interface{}, result interface{}) (err error) {
-	return BindWithTag(source, result, k_BINDING_TAG)
+	return BindWithTag(source, result, kBindingTag)
 }
 
-func BindWithTag(source map[string]interface{}, result interface{}, tag string) (error) {
-	return BindWithAdvanced(source, result, tag, tag);
+func BindWithTag(source map[string]interface{}, result interface{}, tag string) error {
+	return BindWithAdvanced(source, result, tag, tag)
 }
 
-func BindWithAdvanced(source map[string]interface{}, result interface{}, tag, cleanedTag string) (error) {
+func BindWithAdvanced(source map[string]interface{}, result interface{}, tag, cleanedTag string) error {
 	var objType = reflect.TypeOf(result)
 	var objValue = reflect.ValueOf(result)
 	var objValueKind = objValue.Kind()
@@ -50,7 +50,7 @@ func BindWithAdvanced(source map[string]interface{}, result interface{}, tag, cl
 		break
 	}
 
-	var cleanDataValue = objValue.FieldByName(k_BINDING_CLEANED_DATA)
+	var cleanDataValue = objValue.FieldByName(kBindingCleanedData)
 	if cleanDataValue.IsValid() && cleanDataValue.IsNil() {
 		cleanDataValue.Set(reflect.MakeMap(cleanDataValue.Type()))
 	}
@@ -69,7 +69,7 @@ func bindWithMap(objType reflect.Type, currentObjValue, objValue, cleanDataValue
 
 		var tag = fieldStruct.Tag.Get(tagName)
 
-		if tag == "" && fieldStruct.Name != k_BINDING_CLEANED_DATA {
+		if tag == "" && fieldStruct.Name != kBindingCleanedData {
 			tag = fieldStruct.Name
 
 			if fieldValue.Kind() == reflect.Ptr {
@@ -85,7 +85,7 @@ func bindWithMap(objType reflect.Type, currentObjValue, objValue, cleanDataValue
 				}
 				continue
 			}
-		} else if tag == k_BINDING_NO_TAG {
+		} else if tag == kBindingNoTag {
 			continue
 		}
 
@@ -111,7 +111,7 @@ func bindWithMap(objType reflect.Type, currentObjValue, objValue, cleanDataValue
 
 func setCleanedData(cleanDataValue, fieldValue reflect.Value, cdTag string) {
 	if cleanDataValue.IsValid() {
-		if cdTag == k_BINDING_NO_TAG {
+		if cdTag == kBindingNoTag {
 			return
 		}
 		cleanDataValue.SetMapIndex(reflect.ValueOf(cdTag), fieldValue)
@@ -132,7 +132,7 @@ func getFuncWithName(funcName string, currentObjValue, objValue reflect.Value) r
 }
 
 func setDefaultValue(currentObjValue, objValue, fieldValue reflect.Value, fieldStruct reflect.StructField) bool {
-	var funcValue = getFuncWithName(k_BINDING_DEFAULT_FUNC_PREFIX + fieldStruct.Name, currentObjValue, objValue)
+	var funcValue = getFuncWithName(kBindingDefaultFuncPrefix+fieldStruct.Name, currentObjValue, objValue)
 	if funcValue.IsValid() {
 		var rList = funcValue.Call(nil)
 		fieldValue.Set(rList[0])
@@ -145,7 +145,7 @@ func setValue(currentObjValue, objValue, fieldValue reflect.Value, fieldStruct r
 	var vValue = reflect.ValueOf(value)
 	var fieldValueKind = fieldValue.Kind()
 
-	var mValue = getFuncWithName(k_BINDING_CLEANED_FUNC_PREFIX + fieldStruct.Name, currentObjValue, objValue)
+	var mValue = getFuncWithName(kBindingCleanedFuncPrefix+fieldStruct.Name, currentObjValue, objValue)
 	if mValue.IsValid() {
 		var rList = mValue.Call([]reflect.Value{vValue})
 		if len(rList) > 1 {
@@ -161,7 +161,7 @@ func setValue(currentObjValue, objValue, fieldValue reflect.Value, fieldStruct r
 			// 如果绑定源数据也是 slice
 			valueLen = vValue.Len()
 			var s = reflect.MakeSlice(fieldValue.Type(), valueLen, valueLen)
-			for i:=0; i<valueLen; i++ {
+			for i := 0; i < valueLen; i++ {
 				if err := _setValue(s.Index(i), fieldStruct, vValue.Index(i)); err != nil {
 					return err
 				}
@@ -186,7 +186,7 @@ func _setValue(fieldValue reflect.Value, fieldStruct reflect.StructField, value 
 	var valueKind = value.Kind()
 	var fieldKind = fieldValue.Kind()
 
-	if (valueKind == reflect.Slice) {
+	if valueKind == reflect.Slice {
 		// 如果源数据是 slice, 则取出其第一个数据
 		value = value.Index(0)
 		valueKind = value.Kind()
@@ -247,7 +247,7 @@ func _setValueWithDiffKind(fieldValue reflect.Value, fieldStruct reflect.StructF
 	return nil
 }
 
-func boolValue(valueKind reflect.Kind, value reflect.Value) (bool) {
+func boolValue(valueKind reflect.Kind, value reflect.Value) bool {
 	switch valueKind {
 	case reflect.String:
 		var v = value.String()
