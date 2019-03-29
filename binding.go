@@ -15,46 +15,46 @@ const (
 	kBindingDefaultFuncPrefix = "Default"
 )
 
-func Bind(source map[string]interface{}, result interface{}) (err error) {
-	return BindWithTag(source, result, kBindingTag)
+func Bind(source map[string]interface{}, dest interface{}) (err error) {
+	return BindWithTag(source, dest, kBindingTag)
 }
 
-func BindWithTag(source map[string]interface{}, result interface{}, tag string) error {
-	return BindWithAdvanced(source, result, tag, tag)
+func BindWithTag(source map[string]interface{}, dest interface{}, tag string) error {
+	return BindWithAdvanced(source, dest, tag, tag)
 }
 
-func BindWithAdvanced(source map[string]interface{}, result interface{}, tag, cleanedTag string) error {
-	var objType = reflect.TypeOf(result)
-	var objValue = reflect.ValueOf(result)
-	var objValueKind = objValue.Kind()
+func BindWithAdvanced(source map[string]interface{}, dest interface{}, tag, cleanedTag string) error {
+	var destType = reflect.TypeOf(dest)
+	var destValue = reflect.ValueOf(dest)
+	var destValueKind = destValue.Kind()
 
-	if objValueKind == reflect.Struct {
-		return errors.New("result argument is struct")
+	if destValueKind == reflect.Struct {
+		return errors.New("dest argument is struct")
 	}
 
-	if objValue.IsNil() {
-		return errors.New("result argument is nil")
+	if destValue.IsNil() {
+		return errors.New("dest argument is nil")
 	}
 
 	for {
-		if objValueKind == reflect.Ptr && objValue.IsNil() {
-			objValue.Set(reflect.New(objType.Elem()))
+		if destValueKind == reflect.Ptr && destValue.IsNil() {
+			destValue.Set(reflect.New(destType.Elem()))
 		}
 
-		if objValueKind == reflect.Ptr {
-			objValue = objValue.Elem()
-			objType = objType.Elem()
-			objValueKind = objValue.Kind()
+		if destValueKind == reflect.Ptr {
+			destValue = destValue.Elem()
+			destType = destType.Elem()
+			destValueKind = destValue.Kind()
 			continue
 		}
 		break
 	}
 
-	var cleanDataValue = objValue.FieldByName(kBindingCleanedData)
+	var cleanDataValue = destValue.FieldByName(kBindingCleanedData)
 	if cleanDataValue.IsValid() && cleanDataValue.IsNil() {
 		cleanDataValue.Set(reflect.MakeMap(cleanDataValue.Type()))
 	}
-	return bindWithMap(objType, objValue, objValue, cleanDataValue, source, tag, cleanedTag)
+	return bindWithMap(destType, destValue, destValue, cleanDataValue, source, tag, cleanedTag)
 }
 
 func bindWithMap(objType reflect.Type, currentObjValue, objValue, cleanDataValue reflect.Value, source map[string]interface{}, tagName, cleanedTagName string) error {
