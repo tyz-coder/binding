@@ -2,13 +2,13 @@ package binding
 
 import (
 	"fmt"
+	"strconv"
 	"testing"
 	"time"
-	"strconv"
 )
 
 type Human struct {
-	Name     []string    `form:"name"`
+	Name     []string  `form:"name"`
 	Age      int       `form:"age"`
 	Birthday time.Time `form:"birthday"`
 }
@@ -27,7 +27,6 @@ func (this *Student) DefaultClass() string {
 	return "Class one"
 }
 
-
 func (this *Human) DefaultAge() int {
 	return 100
 }
@@ -38,7 +37,7 @@ func (this *Student) DefaultAge() int {
 
 func (this *Student) CleanedNumber(n string) (int, error) {
 	var num, e = strconv.Atoi(n)
-	return num+200, e
+	return num + 200, e
 }
 
 var formData = map[string]interface{}{"name": "Yangfeng", "number": "9", "birthday": "2016-06-12"}
