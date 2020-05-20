@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"reflect"
 	"strconv"
+	"strings"
 )
 
 const (
@@ -221,26 +222,25 @@ func _setValueWithSameKind(fieldValue reflect.Value, fieldStruct reflect.StructF
 func _setValueWithDiffKind(fieldValue reflect.Value, fieldStruct reflect.StructField, valueKind reflect.Kind, value reflect.Value) (err error) {
 	var fieldValueKind = fieldValue.Kind()
 
-	var f float64
-	if fieldValueKind != reflect.Bool {
-		f, err = floatValue(valueKind, value)
-		if err != nil {
-			return errors.New(fmt.Sprintln("[" + fieldStruct.Name + "]" + err.Error()))
-		}
-	}
+	//var f float64
+	//if fieldValueKind != reflect.Bool {
+	//	f, err = floatValue(valueKind, value)
+	//	if err != nil {
+	//		return errors.New(fmt.Sprintln("[" + fieldStruct.Name + "]" + err.Error()))
+	//	}
+	//}
 
 	switch fieldValueKind {
 	case reflect.String:
-		fieldValue.SetString(fmt.Sprintf("%f", f))
+		fieldValue.SetString(stringValue(valueKind, value))
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
-		fieldValue.SetInt(int64(f))
+		fieldValue.SetInt(int64(intValue(valueKind, value)))
 	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uintptr:
-		fieldValue.SetUint(uint64(f))
+		fieldValue.SetUint(intValue(valueKind, value))
 	case reflect.Float32, reflect.Float64:
-		fieldValue.SetFloat(f)
+		fieldValue.SetFloat(floatValue(valueKind, value))
 	case reflect.Bool:
-		var b = boolValue(valueKind, value)
-		fieldValue.SetBool(b)
+		fieldValue.SetBool(boolValue(valueKind, value))
 	default:
 		return errors.New(fmt.Sprintf("Unknown type: %s", fieldStruct.Name))
 	}
@@ -276,7 +276,25 @@ func boolValue(valueKind reflect.Kind, value reflect.Value) bool {
 	return false
 }
 
-func floatValue(valueKind reflect.Kind, value reflect.Value) (float64, error) {
+func stringValue(valueKind reflect.Kind, value reflect.Value) string {
+	switch valueKind {
+	case reflect.Bool:
+		return strconv.FormatBool(value.Bool())
+	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+		return strconv.FormatUint(value.Uint(), 10)
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		return strconv.FormatInt(value.Int(), 10)
+	case reflect.Float32:
+		return strconv.FormatFloat(value.Float(), 'f', -1, 32)
+	case reflect.Float64:
+		return strconv.FormatFloat(value.Float(), 'f', -1, 64)
+	case reflect.String:
+		return value.String()
+	}
+	return fmt.Sprintf("%v", value)
+}
+
+func floatValue(valueKind reflect.Kind, value reflect.Value) float64 {
 	switch valueKind {
 	case reflect.String:
 		var sv = value.String()
@@ -284,19 +302,46 @@ func floatValue(valueKind reflect.Kind, value reflect.Value) (float64, error) {
 			sv = "0"
 		}
 		var v, e = strconv.ParseFloat(sv, 64)
-		return v, e
+		if e != nil {
+			return 0
+		}
+		return v
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
-		return float64(value.Int()), nil
+		return float64(value.Int())
 	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uintptr:
-		return float64(value.Uint()), nil
+		return float64(value.Uint())
 	case reflect.Float32, reflect.Float64:
-		return value.Float(), nil
+		return value.Float()
 	case reflect.Bool:
 		var b = value.Bool()
 		if b {
-			return 1.0, nil
+			return 1.0
 		}
-		return 0.0, nil
+		return 0.0
 	}
-	return 0.0, nil
+	return 0.0
+}
+
+func intValue(valueKind reflect.Kind, value reflect.Value) uint64 {
+	switch valueKind {
+	case reflect.Bool:
+		var v = value.Bool()
+		if v {
+			return 1
+		}
+		return 0
+	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+		return value.Uint()
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		return uint64(value.Int())
+	case reflect.Float32, reflect.Float64:
+		return uint64(value.Float())
+	case reflect.String:
+		var vList = strings.Split(value.String(), ".")
+		var f, err = strconv.ParseUint(vList[0], 10, 64)
+		if err == nil {
+			return f
+		}
+	}
+	return 0.0
 }

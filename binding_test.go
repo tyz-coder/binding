@@ -2,7 +2,6 @@ package binding
 
 import (
 	"fmt"
-	"strconv"
 	"testing"
 	"time"
 )
@@ -19,7 +18,7 @@ func (this *Human) CleanedBirthday(n string) (time.Time, error) {
 
 type Student struct {
 	Human
-	Number int    `form:"number"`
+	Number int64  `form:"number"`
 	Class  string `form:"class"`
 }
 
@@ -35,12 +34,12 @@ func (this *Student) DefaultAge() int {
 	return 200
 }
 
-func (this *Student) CleanedNumber(n string) (int, error) {
-	var num, e = strconv.Atoi(n)
-	return num + 200, e
-}
+//func (this *Student) CleanedNumber(n string) (int, error) {
+//	var num, e = strconv.Atoi(n)
+//	return num + 200, e
+//}
 
-var formData = map[string]interface{}{"name": "Yangfeng", "number": "9", "birthday": "2016-06-12"}
+var formData = map[string]interface{}{"name": "Yangfeng", "number": "3414416614257328130", "birthday": "2016-06-12"}
 
 func TestSample(t *testing.T) {
 	// 绑定
