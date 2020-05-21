@@ -51,6 +51,13 @@ func TestSample(t *testing.T) {
 	fmt.Println(s)
 }
 
+func BenchmarkBind(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		var s *Student
+		BindWithTag(formData, &s, "form")
+	}
+}
+
 //
 //type MyString string
 //
