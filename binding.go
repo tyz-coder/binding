@@ -234,9 +234,9 @@ func _setValueWithDiffKind(fieldValue reflect.Value, fieldStruct reflect.StructF
 	case reflect.String:
 		fieldValue.SetString(stringValue(valueKind, value))
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
-		fieldValue.SetInt(int64(intValue(valueKind, value)))
+		fieldValue.SetInt(intValue(valueKind, value))
 	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uintptr:
-		fieldValue.SetUint(intValue(valueKind, value))
+		fieldValue.SetUint(uintValue(valueKind, value))
 	case reflect.Float32, reflect.Float64:
 		fieldValue.SetFloat(floatValue(valueKind, value))
 	case reflect.Bool:
@@ -322,7 +322,31 @@ func floatValue(valueKind reflect.Kind, value reflect.Value) float64 {
 	return 0.0
 }
 
-func intValue(valueKind reflect.Kind, value reflect.Value) uint64 {
+func intValue(valueKind reflect.Kind, value reflect.Value) int64 {
+	switch valueKind {
+	case reflect.Bool:
+		var v = value.Bool()
+		if v {
+			return 1
+		}
+		return 0
+	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+		return int64(value.Uint())
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		return value.Int()
+	case reflect.Float32, reflect.Float64:
+		return int64(value.Float())
+	case reflect.String:
+		var vList = strings.Split(value.String(), ".")
+		var f, err = strconv.ParseInt(vList[0], 10, 64)
+		if err == nil {
+			return f
+		}
+	}
+	return 0.0
+}
+
+func uintValue(valueKind reflect.Kind, value reflect.Value) uint64 {
 	switch valueKind {
 	case reflect.Bool:
 		var v = value.Bool()
