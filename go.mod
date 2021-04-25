@@ -1,3 +1,3 @@
-module github.com/smartwalle/binding
+module github.com/tyz-coder/binding
 
-go 1.12
+go 1.15
